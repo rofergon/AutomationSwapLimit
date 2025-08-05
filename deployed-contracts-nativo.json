@@ -1,0 +1,7 @@
+{
+  "network": "hederaTestnet",
+  "method": "sdk-nativo",
+  "testToken": "0.0.6503361",
+  "autoSwapLimit": "0.0.6503363",
+  "deployedAt": "2025-08-05T19:48:23.566Z"
+}

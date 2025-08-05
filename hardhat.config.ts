@@ -1,16 +1,13 @@
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
+import "@nomicfoundation/hardhat-verify";
 import * as dotenv from "dotenv";
 
-// Cargar variables de entorno
 dotenv.config();
-
-// Clave privada desde variables de entorno o una clave de ejemplo para testing
-const PRIVATE_KEY = process.env.PRIVATE_KEY || "0x0000000000000000000000000000000000000000000000000000000000000001";
 
 const config: HardhatUserConfig = {
   solidity: {
-    version: "0.8.28",
+    version: "0.8.24",
     settings: {
       optimizer: {
         enabled: true,
@@ -19,53 +16,70 @@ const config: HardhatUserConfig = {
     },
   },
   networks: {
-    // Hedera Testnet (chainId: 296)
+    // Hedera Testnet
     hederaTestnet: {
-      url: "https://testnet.hashio.io/api",
-      chainId: 296,
-      accounts: [PRIVATE_KEY],
-      gas: 300000,
-      gasPrice: 10000000000, // 10 gwei
+      url: process.env.TESTNET_RPC_URL || "https://testnet.hashio.io/api",
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+      chainId: parseInt(process.env.TESTNET_CHAIN_ID || "296"),
+      gas: 10000000, // 10M gas limit
+      gasPrice: 370000000000, // 370 Gwei (mínimo requerido por Hedera)
     },
-    // Hedera Mainnet (chainId: 295)
+    // Hedera Mainnet
     hederaMainnet: {
-      url: "https://mainnet.hashio.io/api",
-      chainId: 295,
-      accounts: [PRIVATE_KEY],
-      gas: 300000,
-      gasPrice: 10000000000, // 10 gwei
+      url: process.env.MAINNET_RPC_URL || "https://mainnet.hashio.io/api",
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+      chainId: parseInt(process.env.MAINNET_CHAIN_ID || "295"),
+      gas: 10000000,
+      gasPrice: 370000000000, // 370 Gwei (mínimo requerido por Hedera)
     },
-    // Hedera Testnet local (si usas un nodo local)
+    // Hedera Local Node (para desarrollo local)
     hederaLocal: {
-      url: "http://localhost:7546",
+      url: "http://127.0.0.1:7546",
+      accounts: [
+        "0x105d050185ccb907fba04dd92d8de9e32c18305e097ab41dadda21489a211524",
+        "0x2e1d968b041d84dd120a5860cee60cd83f9374ef527ca86996317ada3d0d03e7"
+      ],
       chainId: 298,
-      accounts: [PRIVATE_KEY],
+      gas: 10000000,
+      gasPrice: 1000000000,
     },
   },
+  // Configuración para verificación de contratos
   etherscan: {
-    // Para verificación de contratos (opcional)
     apiKey: {
-      hederaTestnet: "abc", // No se requiere clave real para Hedera
-      hederaMainnet: "abc",
+      hederaTestnet: "test",
+      hederaMainnet: "test",
     },
     customChains: [
       {
         network: "hederaTestnet",
         chainId: 296,
         urls: {
-          apiURL: "https://testnet.hashio.io/api",
-          browserURL: "https://hashscan.io/testnet"
-        }
+          apiURL: "https://server-verify.hashscan.io",
+          browserURL: "https://hashscan.io/testnet",
+        },
       },
       {
-        network: "hederaMainnet",
+        network: "hederaMainnet", 
         chainId: 295,
         urls: {
-          apiURL: "https://mainnet.hashio.io/api",
-          browserURL: "https://hashscan.io/mainnet"
-        }
-      }
-    ]
+          apiURL: "https://server-verify.hashscan.io",
+          browserURL: "https://hashscan.io/mainnet",
+        },
+      },
+    ],
+  },
+  // Configuración de sourcify para verificación automática
+  sourcify: {
+    enabled: true,
+    apiUrl: "https://server-verify.hashscan.io",
+    browserUrl: "https://hashscan.io",
+  },
+  paths: {
+    sources: "./contracts",
+    tests: "./test",
+    cache: "./cache",
+    artifacts: "./artifacts"
   },
 };
 
