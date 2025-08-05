@@ -1,0 +1,28 @@
+{
+  "name": "hedera-hardhat-project",
+  "version": "1.0.0",
+  "description": "Proyecto Hardhat configurado para Hedera Hashgraph",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "deploy:testnet": "hardhat run scripts/deploy.ts --network hederaTestnet",
+    "deploy:mainnet": "hardhat run scripts/deploy.ts --network hederaMainnet",
+    "interact:testnet": "hardhat run scripts/interact.ts --network hederaTestnet",
+    "interact:mainnet": "hardhat run scripts/interact.ts --network hederaMainnet",
+    "console:testnet": "hardhat console --network hederaTestnet",
+    "console:mainnet": "hardhat console --network hederaMainnet",
+    "ignition:testnet": "hardhat ignition deploy ignition/modules/HelloWorld.ts --network hederaTestnet",
+    "ignition:mainnet": "hardhat ignition deploy ignition/modules/HelloWorld.ts --network hederaMainnet",
+    "clean": "hardhat clean"
+  },
+  "keywords": ["hedera", "hardhat", "solidity", "blockchain", "smart-contracts"],
+  "author": "Tu Nombre",
+  "license": "MIT",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^6.1.0",
+    "hardhat": "^2.26.1"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.1"
+  }
+}
