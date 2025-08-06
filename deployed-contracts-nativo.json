@@ -1,7 +1,15 @@
 {
   "network": "hederaTestnet",
   "method": "sdk-nativo",
-  "testToken": "0.0.6503361",
-  "autoSwapLimit": "0.0.6503363",
-  "deployedAt": "2025-08-05T19:48:23.566Z"
+  "testToken": "0.0.6503995",
+  "autoSwapLimit": "0.0.6503997",
+  "router": {
+    "type": "SaucerSwap Router V1",
+    "address": "0x0000000000000000000000000000000000004b40",
+    "id": "0.0.19264",
+    "liquidityStatus": "Router V1 compatible con contract-client.ts"
+  },
+  "backendExecutor": "0.0.5864846",
+  "deployedAt": "2025-08-06T01:24:01.811Z",
+  "version": "2.0-RouterV1-Native"
 }

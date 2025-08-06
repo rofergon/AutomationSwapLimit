@@ -1,6 +1,0 @@
-{
-  "network": "hederaTestnet",
-  "testToken": "0x7142A4b3f71834775C760366173f1B69f8eaFe88",
-  "autoSwapLimit": "0xaaa51B3C7b17F10A7fF720E085509079794B1334",
-  "deployedAt": "2025-08-05T17:31:43.399Z"
-}

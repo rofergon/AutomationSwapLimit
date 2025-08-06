@@ -6,6 +6,7 @@ import {
   ContractFunctionParameters,
   Hbar
 } from "@hashgraph/sdk";
+import Long from "long";
 import * as fs from "fs";
 import * as path from "path";
 
@@ -44,13 +45,21 @@ async function main() {
     console.log(`📄 TestToken desplegado en: ${testTokenAddress}`);
     console.log(`📄 AutoSwapLimit desplegado en: ${autoSwapAddress}`);
 
-    // Guardar direcciones en archivo
+    // Guardar direcciones y configuración en archivo
     const addresses = {
       network: "hederaTestnet",
       method: "sdk-nativo",
       testToken: testTokenAddress,
       autoSwapLimit: autoSwapAddress,
-      deployedAt: new Date().toISOString()
+      router: {
+        type: "SaucerSwap Router V1",
+        address: "0x0000000000000000000000000000000000004b40",
+        id: "0.0.19264",
+        liquidityStatus: "Router V1 compatible con contract-client.ts"
+      },
+      backendExecutor: process.env.HEDERA_ACCOUNT_ID,
+      deployedAt: new Date().toISOString(),
+      version: "2.0-RouterV1-Native"
     };
     
     fs.writeFileSync(
@@ -90,7 +99,7 @@ async function deployTestTokenNativo(client: Client): Promise<string> {
         .addString("Test Token")              // name
         .addString("TEST")                    // symbol
         .addUint8(18)                        // decimals
-        .addUint256("1000000000000000000000000") // initial supply (1M tokens with 18 decimals)
+        .addUint256(Long.fromString("1000000" + "0".repeat(18))) // initial supply (1M tokens with 18 decimals)
     );
 
   const contractCreateSubmit = await contractCreateFlow.execute(client);
@@ -107,25 +116,31 @@ async function deployTestTokenNativo(client: Client): Promise<string> {
  * Desplegar AutoSwapLimit usando ContractCreateFlow (SDK nativo)
  */
 async function deployAutoSwapLimitNativo(client: Client): Promise<string> {
-  // Direcciones del testnet
-  const SAUCERSWAP_ROUTER = process.env.SAUCERSWAP_TESTNET_ROUTER_EVM || "0x0000000000000000000000000000000000159398";
-  const WHBAR_TOKEN = process.env.WHBAR_TESTNET_TOKEN_ID || "0.0.15058";
+  // Usar Router V1 SaucerSwap (donde funciona contract-client.ts)
+  const SAUCERSWAP_ROUTER_V1 = "0x0000000000000000000000000000000000004b40"; // Router V1 testnet (0.0.19264) - padded to 42 chars
   const BACKEND_EXECUTOR = process.env.HEDERA_ACCOUNT_ID;
 
   if (!BACKEND_EXECUTOR) {
     throw new Error("HEDERA_ACCOUNT_ID es requerido para el backend executor");
   }
 
-  // Convertir direcciones a formato EVM
-  const whbarEvm = AccountId.fromString(WHBAR_TOKEN).toSolidityAddress();
-  const whbarAddress = `0x${whbarEvm}`;
+  // Convertir backend executor a formato EVM con padding correcto
   const backendEvmAddress = AccountId.fromString(BACKEND_EXECUTOR).toSolidityAddress();
-  const backendAddress = `0x${backendEvmAddress}`;
+  const backendAddress = `0x${backendEvmAddress.padStart(40, '0')}`;
 
-  console.log(`📍 Constructor params:`);
-  console.log(`  Router: ${SAUCERSWAP_ROUTER}`);
-  console.log(`  WHBAR: ${whbarAddress}`);
-  console.log(`  Backend: ${backendAddress}`);
+  console.log(`📍 Constructor params (Router V1 - donde funciona contract-client.ts):`);
+  console.log(`  Router V1: ${SAUCERSWAP_ROUTER_V1} (0.0.19264) - Length: ${SAUCERSWAP_ROUTER_V1.length}`);
+  console.log(`  Backend: ${backendAddress} - Length: ${backendAddress.length}`);
+  console.log(`  💡 WHBAR será obtenido dinámicamente del router`);
+  console.log(`  ✅ Router V1 es el mismo que usa contract-client.ts`);
+  
+  // Verificar que las direcciones tengan el formato correcto
+  if (SAUCERSWAP_ROUTER_V1.length !== 42) {
+    throw new Error(`Router address has incorrect length: ${SAUCERSWAP_ROUTER_V1.length}, expected 42`);
+  }
+  if (backendAddress.length !== 42) {
+    throw new Error(`Backend address has incorrect length: ${backendAddress.length}, expected 42`);
+  }
 
   // Leer bytecode compilado
   const contractPath = path.join(__dirname, "../artifacts/contracts/AutoSwapLimit.sol/AutoSwapLimit.json");
@@ -134,11 +149,10 @@ async function deployAutoSwapLimitNativo(client: Client): Promise<string> {
 
   console.log(`📁 Bytecode size: ${bytecode.length / 2} bytes`);
 
-  // Preparar parámetros del constructor
+  // Preparar parámetros del constructor (actualizado para Router V1)
   const constructorParams = new ContractFunctionParameters()
-    .addAddress(SAUCERSWAP_ROUTER)  // _saucerSwapRouter
-    .addAddress(whbarAddress)       // _weth  
-    .addAddress(backendAddress);    // _backendExecutor
+    .addAddress(SAUCERSWAP_ROUTER_V1)  // _saucerSwapRouter
+    .addAddress(backendAddress);       // _backendExecutor
 
   // Usar ContractCreateFlow para crear archivo y contrato en un paso
   const contractCreateFlow = new ContractCreateFlow()

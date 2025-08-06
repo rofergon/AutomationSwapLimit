@@ -164,11 +164,11 @@ contract AutoSwapLimit is Ownable, ReentrancyGuard {
     // This will be implemented in a future version
     uint256 public constant ROUTER_THRESHOLD = 18000000000; // 180 HBAR in tinybars
     
-    // WHBAR address - hardcoded correct testnet address
+    // WHBAR address - obtained dynamically from router for accuracy
     address public immutable WETH; // WHBAR token address
     
-    // Common tokens for routing (Hedera Testnet addresses - verified with working pools)
-    address public constant USDC = 0x00000000000000000000000000000000000014F5; // USDC testnet corrected
+    // Common tokens for routing (Hedera Testnet addresses - verified)
+    address public constant USDC = 0x0000000000000000000000000000000000001549; // USDC testnet (0.0.5449)
     address public constant SAUCE = 0x0000000000000000000000000000000000120f46; // SAUCE testnet (0.0.1183558)
     // Note: USDT is not available on SaucerSwap testnet
     
@@ -249,9 +249,9 @@ contract AutoSwapLimit is Ownable, ReentrancyGuard {
         
         saucerSwapRouter = ISaucerSwapRouter(_saucerSwapRouter);
         
-        // Use correct WHBAR address for testnet (verified working address)
-        WETH = 0x0000000000000000000000000000000000003aD2; // WHBAR testnet corrected
-        require(WETH != address(0), "WHBAR address cannot be zero");
+        // Get WHBAR address dynamically from router for accuracy
+        WETH = saucerSwapRouter.WHBAR();
+        require(WETH != address(0), "WHBAR address from router cannot be zero");
         
         backendExecutor = _backendExecutor;
         
@@ -344,15 +344,12 @@ contract AutoSwapLimit is Ownable, ReentrancyGuard {
         uint256[] memory amounts = saucerSwapRouter.swapExactETHForTokens{value: order.amountIn}(
             order.minAmountOut,  // amountOutMin
             path,                // path
-            address(this),       // to (send tokens to contract first)
+            order.owner,         // to (send tokens directly to owner)
             deadline             // deadline
         );
         
         // amounts[path.length - 1] is the amount of tokens received
         uint256 amountOut = amounts[path.length - 1];
-        
-        // Transfer received tokens to order owner
-        IERC20(order.tokenOut).transfer(order.owner, amountOut);
         
         // Pay fee to executor (whoever executed the order)
         payable(msg.sender).transfer(executionFee);
@@ -512,20 +509,20 @@ contract AutoSwapLimit is Ownable, ReentrancyGuard {
         require(tokenOut != address(0), "Invalid tokenOut address");
         require(tokenOut != WETH, "Cannot swap WHBAR to WHBAR");
         
-        // Direct path only for USDC (confirmed direct WHBAR pair)
-        if (tokenOut == USDC) {
+        // Direct path for tokens with confirmed WHBAR pairs
+        if (tokenOut == USDC || tokenOut == SAUCE) {
             path = new address[](2);
-            path[0] = WETH;    // WHBAR
-            path[1] = tokenOut; // USDC directly
+            path[0] = WETH;    // WHBAR from router
+            path[1] = tokenOut; // Target token directly
             return path;
         }
         
-        // For ALL other tokens including SAUCE, use multi-hop through USDC
-        // Path: WHBAR -> USDC -> TOKEN (this is the working path for testnet)
+        // For other tokens, use multi-hop through USDC (if USDC pair exists)
+        // Path: WHBAR -> USDC -> TOKEN
         path = new address[](3);
-        path[0] = WETH;     // WHBAR
-        path[1] = USDC;     // Intermediate token (USDC has the most liquidity)
-        path[2] = tokenOut; // Target token (SAUCE, etc.)
+        path[0] = WETH;     // WHBAR from router
+        path[1] = USDC;     // Intermediate token (most liquid stablecoin available)
+        path[2] = tokenOut; // Target token
         
         return path;
     }
@@ -697,9 +694,9 @@ contract AutoSwapLimit is Ownable, ReentrancyGuard {
     ) {
         return (
             USDC,
-            "USDC Testnet - Direct WHBAR pair available",
+            "USDC Testnet (0.0.5449) - Direct WHBAR pair available",
             SAUCE,
-            "SAUCE Testnet (0.0.1183558) - Multi-hop through USDC"
+            "SAUCE Testnet (0.0.1183558) - Direct WHBAR pair available"
         );
     }
     
