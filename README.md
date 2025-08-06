@@ -225,27 +225,7 @@ await autoSwapLimit.executeSwapOrder(orderId, currentPrice);
 
 Tokens are automatically transferred to the user using HTS.
 
-## 🧪 Testing
 
-### Test Suite
-
-- **AutoSwapLimit.swapFlow.test.ts**: Complete swap flow test
-- **Deployment Tests**: Correct deployment verification
-- **Token Association Tests**: HIP-206 validation
-- **Execution Tests**: Order execution tests
-
-### Run Tests
-
-```bash
-# Local test
-npm test
-
-# Hedera Testnet test
-npm run test:hedera
-
-# Specific test
-npx hardhat test test/AutoSwapLimit.swapFlow.test.ts --network hederaTestnet
-```
 
 ## 🌐 Contract Addresses
 
@@ -258,13 +238,7 @@ npx hardhat test test/AutoSwapLimit.swapFlow.test.ts --network hederaTestnet
 
 Deployed contracts are verifiable on [HashScan](https://hashscan.io/testnet).
 
-## 🤝 Contributing
 
-1. Fork the project
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
 
 ## 📝 License
 
