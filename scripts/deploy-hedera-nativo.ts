@@ -33,23 +33,23 @@ async function main() {
     console.log("📦 Compilando contratos...");
     await hre.run("compile");
 
-    // 2. Desplegar TestToken
-    console.log("🪙 Desplegando TestToken con SDK nativo...");
-    const testTokenAddress = await deployTestTokenNativo(client);
+    // 2. Desplegar MockPriceOracle
+    console.log("🔮 Desplegando MockPriceOracle con SDK nativo...");
+    const oracleAddress = await deployMockPriceOracleNativo(client);
     
     // 3. Desplegar AutoSwapLimit
     console.log("🔄 Desplegando AutoSwapLimit con SDK nativo...");
     const autoSwapAddress = await deployAutoSwapLimitNativo(client);
 
     console.log("✅ Despliegue completado!");
-    console.log(`📄 TestToken desplegado en: ${testTokenAddress}`);
+    console.log(`📄 MockPriceOracle desplegado en: ${oracleAddress}`);
     console.log(`📄 AutoSwapLimit desplegado en: ${autoSwapAddress}`);
 
     // Guardar direcciones y configuración en archivo
     const addresses = {
       network: "hederaTestnet",
       method: "sdk-nativo",
-      testToken: testTokenAddress,
+      mockPriceOracle: oracleAddress,
       autoSwapLimit: autoSwapAddress,
       router: {
         type: "SaucerSwap Router V1",
@@ -60,6 +60,18 @@ async function main() {
       backendExecutor: process.env.HEDERA_ACCOUNT_ID,
       deployedAt: new Date().toISOString(),
       version: "2.1-RouterV1-Native-HIP206",
+      oracle: {
+        address: oracleAddress,
+        description: "Mock price oracle for HBAR and SAUCE",
+        initialPrices: {
+          HBAR: "$0.27 USDC",
+          WHBAR: "$0.27 USDC",
+          SAUCE: "$0.0587 USDC",
+          USDC: "$1.00 USDC"
+        },
+        precision: "8 decimals",
+        features: ["Manual price updates", "Price freshness validation", "Multi-token support"]
+      },
       features: {
         hip206: {
           enabled: true,
@@ -88,7 +100,7 @@ async function main() {
     );
 
     console.log("🔗 Verificar en HashScan:");
-    console.log(`  TestToken: https://hashscan.io/testnet/contract/${testTokenAddress}`);
+    console.log(`  MockPriceOracle: https://hashscan.io/testnet/contract/${oracleAddress}`);
     console.log(`  AutoSwapLimit: https://hashscan.io/testnet/contract/${autoSwapAddress}`);
 
   } catch (error) {
@@ -100,34 +112,29 @@ async function main() {
 }
 
 /**
- * Desplegar TestToken usando ContractCreateFlow (SDK nativo)
+ * Desplegar MockPriceOracle usando ContractCreateFlow (SDK nativo)
  */
-async function deployTestTokenNativo(client: Client): Promise<string> {
+async function deployMockPriceOracleNativo(client: Client): Promise<string> {
   // Leer bytecode compilado
-  const contractPath = path.join(__dirname, "../artifacts/contracts/TestToken.sol/TestToken.json");
+  const contractPath = path.join(__dirname, "../artifacts/contracts/MockPriceOracle.sol/MockPriceOracle.json");
   const contractJson = JSON.parse(fs.readFileSync(contractPath, "utf8"));
   const bytecode = contractJson.bytecode;
 
   console.log(`📁 Bytecode size: ${bytecode.length / 2} bytes`);
+  console.log(`💰 Precios iniciales: HBAR=$0.27, SAUCE=$0.0587`);
 
   // Usar ContractCreateFlow para crear archivo y contrato en un paso
   const contractCreateFlow = new ContractCreateFlow()
     .setBytecode(bytecode)
-    .setGas(2000000)
-    .setConstructorParameters(
-      new ContractFunctionParameters()
-        .addString("Test Token")              // name
-        .addString("TEST")                    // symbol
-        .addUint8(18)                        // decimals
-        .addUint256(Long.fromString("1000000" + "0".repeat(18))) // initial supply (1M tokens with 18 decimals)
-    );
+    .setGas(3000000); // Gas para el constructor del oráculo
 
   const contractCreateSubmit = await contractCreateFlow.execute(client);
   const contractCreateReceipt = await contractCreateSubmit.getReceipt(client);
   const contractId = contractCreateReceipt.contractId!;
 
-  console.log(`✅ TestToken creado con ID: ${contractId}`);
+  console.log(`✅ MockPriceOracle creado con ID: ${contractId}`);
   console.log(`📋 Dirección EVM: 0x${contractId.toSolidityAddress()}`);
+  console.log(`🔮 Oráculo listo con precios mock para HBAR y SAUCE`);
   
   return contractId.toString();
 }
