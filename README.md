@@ -43,63 +43,6 @@ graph TB
 - npm or yarn
 - Hedera Testnet account with HBAR
 
-### Project Setup
-
-```bash
-# Clone the repository
-git clone <repository-url>
-cd AutomationSwapLimit
-
-# Install dependencies
-npm install
-
-# Configure environment variables
-cp .env.example .env
-```
-
-### Environment Variables
-
-Create a `.env` file with:
-
-```bash
-# Hedera Account Configuration
-HEDERA_ACCOUNT_ID=0.0.YOUR_ACCOUNT_ID
-PRIVATE_KEY=your_private_key_here
-
-# Network Configuration
-TESTNET_RPC_URL=https://testnet.hashio.io/api
-TESTNET_CHAIN_ID=296
-MAINNET_RPC_URL=https://mainnet.hashio.io/api
-MAINNET_CHAIN_ID=295
-```
-
-## 🚀 Usage
-
-### Compilation
-
-```bash
-npm run compile
-```
-
-### Deployment
-
-```bash
-# Deploy to Hedera Testnet using native SDK
-npm run deploy:nativo
-```
-
-### Testing
-
-```bash
-# Run all tests
-npm test
-
-# Specific swap flow test
-npm run test:swap-flow
-
-# Hedera execution test
-npm run test:hedera
-```
 
 ## 🔧 Main Contracts
 
@@ -225,7 +168,27 @@ await autoSwapLimit.executeSwapOrder(orderId, currentPrice);
 
 Tokens are automatically transferred to the user using HTS.
 
+## 🧪 Testing
 
+### Test Suite
+
+- **AutoSwapLimit.swapFlow.test.ts**: Complete swap flow test
+- **Deployment Tests**: Correct deployment verification
+- **Token Association Tests**: HIP-206 validation
+- **Execution Tests**: Order execution tests
+
+### Run Tests
+
+```bash
+# Local test
+npm test
+
+# Hedera Testnet test
+npm run test:hedera
+
+# Specific test
+npx hardhat test test/AutoSwapLimit.swapFlow.test.ts --network hederaTestnet
+```
 
 ## 🌐 Contract Addresses
 
@@ -234,11 +197,22 @@ Tokens are automatically transferred to the user using HTS.
 - **SaucerSwap Router V1**: `0x0000000000000000000000000000000000004B5C` (0.0.19264)
 - **WHBAR**: `0x0000000000000000000000000000000000003aD2` (0.0.14802)
 
+### Deployed Contracts
+
+- **MockPriceOracle**: [https://hashscan.io/testnet/contract/0.0.6506125](https://hashscan.io/testnet/contract/0.0.6506125)
+- **AutoSwapLimit**: [https://hashscan.io/testnet/contract/0.0.6506134](https://hashscan.io/testnet/contract/0.0.6506134)
+
 ### Verification
 
 Deployed contracts are verifiable on [HashScan](https://hashscan.io/testnet).
 
+## 🤝 Contributing
 
+1. Fork the project
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
 ## 📝 License
 
