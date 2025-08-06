@@ -13,6 +13,7 @@
     "test-public-execution": "hardhat run scripts/create-fresh-order.ts --network hederaTestnet",
     "associate-tokens": "hardhat run scripts/associate-tokens.ts --network hederaTestnet",
     "deploy:nativo": "hardhat run scripts/deploy-hedera-nativo.ts --network hederaTestnet",
+    "test-token-association": "hardhat run scripts/test-token-association.ts --network hederaTestnet",
     "clean": "hardhat clean",
     "build": "npm run clean && npm run compile",
     "test:watch": "hardhat test --watch",

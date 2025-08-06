@@ -1,8 +1,8 @@
 {
   "network": "hederaTestnet",
   "method": "sdk-nativo",
-  "testToken": "0.0.6503995",
-  "autoSwapLimit": "0.0.6503997",
+  "testToken": "0.0.6504724",
+  "autoSwapLimit": "0.0.6504733",
   "router": {
     "type": "SaucerSwap Router V1",
     "address": "0x0000000000000000000000000000000000004b40",
@@ -10,6 +10,26 @@
     "liquidityStatus": "Router V1 compatible con contract-client.ts"
   },
   "backendExecutor": "0.0.5864846",
-  "deployedAt": "2025-08-06T01:24:01.811Z",
-  "version": "2.0-RouterV1-Native"
+  "deployedAt": "2025-08-06T03:11:05.981Z",
+  "version": "2.1-RouterV1-Native-HIP206",
+  "features": {
+    "hip206": {
+      "enabled": true,
+      "description": "Hedera Token Service integration for automatic token association",
+      "supportedTokens": [
+        {
+          "symbol": "USDC",
+          "address": "0x0000000000000000000000000000000000001549",
+          "id": "0.0.5449",
+          "autoAssociated": true
+        },
+        {
+          "symbol": "SAUCE",
+          "address": "0x0000000000000000000000000000000000120f46",
+          "id": "0.0.1183558",
+          "autoAssociated": true
+        }
+      ]
+    }
+  }
 }

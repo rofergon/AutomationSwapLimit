@@ -43,7 +43,7 @@ describe("AutoSwapLimit - Flujo Completo de Swap HBAR→SAUCE", function() {
     client.setOperator(operatorAccountId, operatorPrivateKey);
 
     // Usar contratos desplegados más recientes
-    contractId = "0.0.6503997"; // AutoSwapLimit con path directo HBAR→SAUCE
+    contractId = "0.0.6504733"; // AutoSwapLimit con path corregido HBAR→USDC→SAUCE
     
     console.log(`\n🧪 Testing AutoSwapLimit - Flujo HBAR→SAUCE`);
     console.log(`📋 AutoSwapLimit Contract: ${contractId}`);
@@ -243,7 +243,7 @@ describe("AutoSwapLimit - Flujo Completo de Swap HBAR→SAUCE", function() {
 
       console.log(`\n🛣️ Path para el swap HBAR→SAUCE:`);
       console.log(`  Info: ${pathInfo}`);
-      console.log(`  Esperado: Direct path: WHBAR -> SAUCE (sin USDC intermedio)`);
+      console.log(`  Esperado: Multi-hop path: WHBAR -> USDC -> SAUCE`);
 
       // Ejecutar la orden
       const executeOrderTx = new ContractExecuteTransaction()
