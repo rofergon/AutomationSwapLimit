@@ -5,28 +5,28 @@
 [![SaucerSwap](https://img.shields.io/badge/SaucerSwap-V1-green)](https://saucerswap.finance)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**AutoSwapLimit** es un protocolo de automatización de órdenes límite construido sobre **Hedera Hashgraph** que permite a los usuarios crear órdenes de intercambio automatizadas que se ejecutan cuando se alcanzan precios objetivo específicos usando **SaucerSwap**.
+**AutoSwapLimit** is an automated limit order protocol built on **Hedera Hashgraph** that allows users to create automated swap orders that execute when specific target prices are reached using **SaucerSwap**.
 
-## 🌟 Características Principales
+## 🌟 Key Features
 
-- 🎯 **Órdenes Límite Automatizadas**: Configura intercambios que se ejecutan automáticamente al alcanzar precios objetivo
-- ⚡ **Integración Nativa Hedera**: Utiliza HIP-206 (Hedera Token Service) para gestión eficiente de tokens
-- 🔄 **SaucerSwap Integration**: Conectado con SaucerSwap Router V1 para liquidez optimizada
-- 🛡️ **Ejecución Segura**: Sistema de ejecutores autorizados con tarifas competitivas
-- 📊 **Oracle de Precios**: Mock oracle integrado para testing y desarrollo
-- 🔐 **Sin Custodia**: Los usuarios mantienen control total de sus fondos hasta la ejecución
+- 🎯 **Automated Limit Orders**: Configure swaps that execute automatically when target prices are reached
+- ⚡ **Native Hedera Integration**: Uses HIP-206 (Hedera Token Service) for efficient token management
+- 🔄 **SaucerSwap Integration**: Connected with SaucerSwap Router V1 for optimized liquidity
+- 🛡️ **Secure Execution**: Authorized executor system with competitive fees
+- 📊 **Price Oracle**: Integrated mock oracle for testing and development
+- 🔐 **Non-Custodial**: Users maintain full control of their funds until execution
 
-## 🏗️ Arquitectura del Sistema
+## 🏗️ System Architecture
 
 ```mermaid
 graph TB
-    U[Usuario] -->|Deposita HBAR| AS[AutoSwapLimit Contract]
-    AS -->|Valida Precio| O[Mock Price Oracle]
-    AS -->|Ejecuta Swap| SS[SaucerSwap Router V1]
-    AS -->|Transfiere Tokens| HTS[Hedera Token Service]
-    E[Ejecutores] -->|Monitorean Órdenes| AS
+    U[User] -->|Deposits HBAR| AS[AutoSwapLimit Contract]
+    AS -->|Validates Price| O[Mock Price Oracle]
+    AS -->|Executes Swap| SS[SaucerSwap Router V1]
+    AS -->|Transfers Tokens| HTS[Hedera Token Service]
+    E[Executors] -->|Monitor Orders| AS
     
-    subgraph "Tokens Soportados"
+    subgraph "Supported Tokens"
         USDC[USDC - 0.0.5349]
         SAUCE[SAUCE - 0.0.1183558]
     end
@@ -35,31 +35,31 @@ graph TB
     SS --> SAUCE
 ```
 
-## 📦 Instalación
+## 📦 Installation
 
-### Prerequisitos
+### Prerequisites
 
 - Node.js 18+
-- npm o yarn
-- Cuenta Hedera Testnet con HBAR
+- npm or yarn
+- Hedera Testnet account with HBAR
 
-### Configuración del Proyecto
+### Project Setup
 
 ```bash
-# Clonar el repositorio
+# Clone the repository
 git clone <repository-url>
 cd AutomationSwapLimit
 
-# Instalar dependencias
+# Install dependencies
 npm install
 
-# Configurar variables de entorno
+# Configure environment variables
 cp .env.example .env
 ```
 
-### Variables de Entorno
+### Environment Variables
 
-Crea un archivo `.env` con:
+Create a `.env` file with:
 
 ```bash
 # Hedera Account Configuration
@@ -73,218 +73,218 @@ MAINNET_RPC_URL=https://mainnet.hashio.io/api
 MAINNET_CHAIN_ID=295
 ```
 
-## 🚀 Uso
+## 🚀 Usage
 
-### Compilación
+### Compilation
 
 ```bash
 npm run compile
 ```
 
-### Despliegue
+### Deployment
 
 ```bash
-# Desplegar en Hedera Testnet usando SDK nativo
+# Deploy to Hedera Testnet using native SDK
 npm run deploy:nativo
 ```
 
 ### Testing
 
 ```bash
-# Ejecutar todos los tests
+# Run all tests
 npm test
 
-# Test específico de flujo de swap
+# Specific swap flow test
 npm run test:swap-flow
 
-# Test de ejecución en Hedera
+# Hedera execution test
 npm run test:hedera
 ```
 
-## 🔧 Contratos Principales
+## 🔧 Main Contracts
 
 ### AutoSwapLimit.sol
 
-Contrato principal que gestiona las órdenes límite automatizadas.
+Main contract that manages automated limit orders.
 
-**Funciones Principales:**
+**Main Functions:**
 
 ```solidity
-// Crear nueva orden límite
+// Create new limit order
 function createSwapOrder(
-    address tokenOut,      // Token a recibir
-    uint256 minAmountOut,  // Cantidad mínima esperada
-    uint256 triggerPrice,  // Precio que activa la orden
-    uint256 expirationTime // Tiempo de expiración
+    address tokenOut,      // Token to receive
+    uint256 minAmountOut,  // Minimum expected amount
+    uint256 triggerPrice,  // Price that triggers the order
+    uint256 expirationTime // Expiration time
 ) external payable
 
-// Ejecutar orden (ejecutores autorizados)
+// Execute order (authorized executors)
 function executeSwapOrder(uint256 orderId, uint256 currentPrice) external
 
-// Cancelar orden (solo propietario)
+// Cancel order (owner only)
 function cancelSwapOrder(uint256 orderId) external
 ```
 
 ### MockPriceOracle.sol
 
-Oracle de precios para testing con feeds configurables.
+Price oracle for testing with configurable feeds.
 
-**Tokens Soportados:**
-- **USDC**: $1.00 USD (referencia)
+**Supported Tokens:**
+- **USDC**: $1.00 USD (reference)
 - **HBAR/WHBAR**: $0.27 USD
 - **SAUCE**: $0.0587 USD
 
 ### HederaTokenService.sol
 
-Wrapper para HIP-206 que maneja asociación automática de tokens.
+HIP-206 wrapper that handles automatic token association.
 
-## 📊 Configuración de Tokens
+## 📊 Token Configuration
 
-### Tokens Testnet Soportados
+### Supported Testnet Tokens
 
-| Token | Dirección | Hedera ID | Path |
-|-------|-----------|-----------|------|
+| Token | Address | Hedera ID | Path |
+|-------|---------|-----------|------|
 | USDC | `0x00000000000000000000000000000000000014F5` | 0.0.5349 | WHBAR → USDC |
 | SAUCE | `0x0000000000000000000000000000000000120f46` | 0.0.1183558 | WHBAR → USDC → SAUCE |
 
-### Límites del Sistema
+### System Limits
 
-- **Monto Mínimo**: 0.01 HBAR
-- **Monto Máximo**: 180 HBAR (Router V1)
-- **Tarifa de Ejecución**: 0.1 HBAR
-- **Tiempo Máximo de Expiración**: 30 días
+- **Minimum Amount**: 0.01 HBAR
+- **Maximum Amount**: 180 HBAR (Router V1)
+- **Execution Fee**: 0.1 HBAR
+- **Maximum Expiration Time**: 30 days
 
-## 🛠️ Scripts Útiles
+## 🛠️ Useful Scripts
 
 ```bash
-# Crear orden fresca para testing
+# Create fresh order for testing
 npm run create-fresh-order
 
-# Probar asociación de tokens
+# Test token association
 npm run test-token-association
 
-# Testing de ejecución pública
+# Public execution testing
 npm run test-public-execution
 
-# Limpiar compilación
+# Clean compilation
 npm run clean
 
-# Build completo
+# Complete build
 npm run build
 ```
 
-## 🔐 Seguridad
+## 🔐 Security
 
-### Características de Seguridad
+### Security Features
 
-- ✅ **ReentrancyGuard**: Protección contra ataques de reentrada
-- ✅ **Ownable**: Control de acceso para funciones administrativas
-- ✅ **Validación de Precios**: Oracle independiente para verificación
-- ✅ **Límites de Tiempo**: Expiración automática de órdenes
-- ✅ **Validación de Tokens**: Solo tokens pre-aprobados
+- ✅ **ReentrancyGuard**: Protection against reentrancy attacks
+- ✅ **Ownable**: Access control for administrative functions
+- ✅ **Price Validation**: Independent oracle for verification
+- ✅ **Time Limits**: Automatic order expiration
+- ✅ **Token Validation**: Only pre-approved tokens
 
-### Ejecutores Autorizados
+### Authorized Executors
 
-El sistema soporta tres tipos de ejecutores:
+The system supports three types of executors:
 
-1. **Backend Executor**: Executor principal del sistema
-2. **Ejecutores Autorizados**: Lista de direcciones aprobadas por el owner
-3. **Ejecución Pública**: Cualquier usuario puede ejecutar órdenes (configurable)
+1. **Backend Executor**: Main system executor
+2. **Authorized Executors**: List of addresses approved by the owner
+3. **Public Execution**: Any user can execute orders (configurable)
 
-## 📈 Flujo de Usuario
+## 📈 User Flow
 
-### 1. Crear Orden
+### 1. Create Order
 
 ```typescript
-// Enviar HBAR y crear orden límite
+// Send HBAR and create limit order
 const tx = await autoSwapLimit.createSwapOrder(
-    usdcAddress,           // Quiero recibir USDC
-    expectedAmount,        // Cantidad mínima
-    triggerPrice,          // Precio objetivo
-    expirationTime,        // Válida por 24 horas
-    { value: hbarAmount }  // HBAR + tarifa ejecución
+    usdcAddress,           // I want to receive USDC
+    expectedAmount,        // Minimum amount
+    triggerPrice,          // Target price
+    expirationTime,        // Valid for 24 hours
+    { value: hbarAmount }  // HBAR + execution fee
 );
 ```
 
-### 2. Monitoreo
+### 2. Monitoring
 
-Las órdenes son monitoreadas automáticamente por:
-- Backend executor del sistema
-- Ejecutores autorizados
-- Usuarios públicos (si está habilitado)
+Orders are automatically monitored by:
+- System backend executor
+- Authorized executors
+- Public users (if enabled)
 
-### 3. Ejecución
+### 3. Execution
 
-Cuando el precio objetivo se alcanza:
+When the target price is reached:
 ```typescript
-// El ejecutor llama a esta función
+// The executor calls this function
 await autoSwapLimit.executeSwapOrder(orderId, currentPrice);
 ```
 
-### 4. Recepción de Tokens
+### 4. Token Reception
 
-Los tokens se transfieren automáticamente al usuario usando HTS.
+Tokens are automatically transferred to the user using HTS.
 
 ## 🧪 Testing
 
 ### Test Suite
 
-- **AutoSwapLimit.swapFlow.test.ts**: Test completo del flujo de swap
-- **Deployment Tests**: Verificación de despliegue correcto
-- **Token Association Tests**: Validación de HIP-206
-- **Execution Tests**: Pruebas de ejecución de órdenes
+- **AutoSwapLimit.swapFlow.test.ts**: Complete swap flow test
+- **Deployment Tests**: Correct deployment verification
+- **Token Association Tests**: HIP-206 validation
+- **Execution Tests**: Order execution tests
 
-### Ejecutar Tests
+### Run Tests
 
 ```bash
-# Test local
+# Local test
 npm test
 
-# Test en Hedera Testnet
+# Hedera Testnet test
 npm run test:hedera
 
-# Test específico
+# Specific test
 npx hardhat test test/AutoSwapLimit.swapFlow.test.ts --network hederaTestnet
 ```
 
-## 🌐 Direcciones de Contrato
+## 🌐 Contract Addresses
 
 ### Testnet
 
 - **SaucerSwap Router V1**: `0x0000000000000000000000000000000000004B5C` (0.0.19264)
 - **WHBAR**: `0x0000000000000000000000000000000000003aD2` (0.0.14802)
 
-### Verificación
+### Verification
 
-Los contratos desplegados son verificables en [HashScan](https://hashscan.io/testnet).
+Deployed contracts are verifiable on [HashScan](https://hashscan.io/testnet).
 
-## 🤝 Contribución
+## 🤝 Contributing
 
-1. Fork el proyecto
-2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
-3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
-4. Push a la rama (`git push origin feature/AmazingFeature`)
-5. Abre un Pull Request
+1. Fork the project
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-## 📝 Licencia
+## 📝 License
 
-Este proyecto está bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) para detalles.
+This project is under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🔗 Links Útiles
+## 🔗 Useful Links
 
 - [Hedera Documentation](https://docs.hedera.com/)
 - [SaucerSwap](https://saucerswap.finance/)
 - [HIP-206 Specification](https://hips.hedera.com/hip/hip-206)
 - [HashScan Explorer](https://hashscan.io/)
 
-## 📞 Soporte
+## 📞 Support
 
-Para preguntas o soporte:
+For questions or support:
 
-- Crear un issue en GitHub
-- Documentación técnica en `/docs`
-- Revisar `HIP-206-INTEGRATION.md` para detalles de integración
+- Create an issue on GitHub
+- Technical documentation in `/docs`
+- Review `HIP-206-INTEGRATION.md` for integration details
 
 ---
 
-**⚠️ Disclaimer**: Este es un proyecto de desarrollo. Usar en testnet únicamente. No apto para mainnet sin auditoría de seguridad completa.
+**⚠️ Disclaimer**: This is a development project. Use on testnet only. Not suitable for mainnet without complete security audit.
