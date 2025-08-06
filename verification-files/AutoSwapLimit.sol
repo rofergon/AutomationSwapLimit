@@ -4,6 +4,7 @@ pragma solidity ^0.8.24;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "./HederaTokenService.sol";
 
 // Interface for SaucerSwap Router V1 (0.0.19264)
 interface ISaucerSwapRouter {
@@ -144,7 +145,7 @@ interface ISaucerSwapRouter {
  * @dev Automation contract for limit swaps using SaucerSwap on Hedera
  * Users deposit HBAR and create limit orders that can be executed by authorized executors or anyone
  */
-contract AutoSwapLimit is Ownable, ReentrancyGuard {
+contract AutoSwapLimit is Ownable, ReentrancyGuard, HederaTokenService {
     
     struct SwapOrder {
         address tokenOut;       // Token to receive from swap
@@ -168,9 +169,14 @@ contract AutoSwapLimit is Ownable, ReentrancyGuard {
     address public immutable WETH; // WHBAR token address
     
     // Common tokens for routing (Hedera Testnet addresses - verified)
-    address public constant USDC = 0x0000000000000000000000000000000000001549; // USDC testnet (0.0.5449)
+    address public constant WHBAR_FOR_PATH = 0x0000000000000000000000000000000000003aD2; // WHBAR real address for paths
+    address public constant USDC = 0x00000000000000000000000000000000000014F5; // USDC testnet (0.0.5349) - Dirección corregida
     address public constant SAUCE = 0x0000000000000000000000000000000000120f46; // SAUCE testnet (0.0.1183558)
     // Note: USDT is not available on SaucerSwap testnet
+    
+    // Lista de tokens que el contrato puede manejar
+    address[] public supportedTokens;
+    mapping(address => bool) public isSupportedToken;
     
     // Mappings for orders
     mapping(uint256 => SwapOrder) public swapOrders;
@@ -220,6 +226,14 @@ contract AutoSwapLimit is Ownable, ReentrancyGuard {
     
     event RouterThresholdExceeded(uint256 indexed orderId, uint256 amount, uint256 threshold);
     
+    event TokenAssociated(address indexed token, int responseCode);
+    
+    event TokensAssociated(address[] tokens, int responseCode);
+    
+    event SupportedTokenAdded(address indexed token);
+    
+    event SupportedTokenRemoved(address indexed token);
+    
     modifier onlyOrderOwner(uint256 orderId) {
         require(swapOrders[orderId].owner == msg.sender, "You are not the owner of this order");
         _;
@@ -258,8 +272,90 @@ contract AutoSwapLimit is Ownable, ReentrancyGuard {
         // Add backend executor to authorized list
         authorizedExecutors[_backendExecutor] = true;
         executorList.push(_backendExecutor);
+        
+        // Inicializar tokens soportados
+        supportedTokens.push(USDC);
+        supportedTokens.push(SAUCE);
+        isSupportedToken[USDC] = true;
+        isSupportedToken[SAUCE] = true;
+        
+        // Asociar automáticamente los tokens principales al contrato
+        _associateTokensToContract();
     }
     
+    /**
+     * @dev Asocia automáticamente los tokens principales al contrato
+     */
+    function _associateTokensToContract() private {
+        address[] memory tokensToAssociate = new address[](2);
+        tokensToAssociate[0] = USDC;
+        tokensToAssociate[1] = SAUCE;
+        
+        int responseCode = associateTokens(address(this), tokensToAssociate);
+        emit TokensAssociated(tokensToAssociate, responseCode);
+    }
+    
+    /**
+     * @dev Asocia un token específico al contrato (owner only)
+     * @param token Dirección del token a asociar
+     */
+    function associateTokenToContract(address token) external onlyOwner {
+        require(token != address(0), "Token address cannot be zero");
+        
+        int responseCode = associateToken(address(this), token);
+        emit TokenAssociated(token, responseCode);
+        
+        // Agregar a la lista de tokens soportados si la asociación fue exitosa
+        if (responseCode == HederaResponseCodes.SUCCESS && !isSupportedToken[token]) {
+            supportedTokens.push(token);
+            isSupportedToken[token] = true;
+            emit SupportedTokenAdded(token);
+        }
+    }
+    
+    /**
+     * @dev Asocia múltiples tokens al contrato (owner only)
+     * @param tokens Array de direcciones de tokens a asociar
+     */
+    function associateTokensToContract(address[] memory tokens) external onlyOwner {
+        require(tokens.length > 0, "Tokens array cannot be empty");
+        
+        int responseCode = associateTokens(address(this), tokens);
+        emit TokensAssociated(tokens, responseCode);
+        
+        // Agregar a la lista de tokens soportados si la asociación fue exitosa
+        if (responseCode == HederaResponseCodes.SUCCESS) {
+            for (uint256 i = 0; i < tokens.length; i++) {
+                if (!isSupportedToken[tokens[i]]) {
+                    supportedTokens.push(tokens[i]);
+                    isSupportedToken[tokens[i]] = true;
+                    emit SupportedTokenAdded(tokens[i]);
+                }
+            }
+        }
+    }
+    
+    /**
+     * @dev Remueve un token de la lista de tokens soportados (owner only)
+     * @param token Dirección del token a remover
+     */
+    function removeSupportedToken(address token) external onlyOwner {
+        require(isSupportedToken[token], "Token is not supported");
+        
+        isSupportedToken[token] = false;
+        
+        // Remover del array
+        for (uint256 i = 0; i < supportedTokens.length; i++) {
+            if (supportedTokens[i] == token) {
+                supportedTokens[i] = supportedTokens[supportedTokens.length - 1];
+                supportedTokens.pop();
+                break;
+            }
+        }
+        
+        emit SupportedTokenRemoved(token);
+    }
+
     /**
      * @dev Create a new automatic swap order from HBAR to token
      * @param tokenOut Address of the token to receive
@@ -279,6 +375,7 @@ contract AutoSwapLimit is Ownable, ReentrancyGuard {
         require(expirationTime > block.timestamp, "Expiration time must be in the future");
         require(expirationTime <= block.timestamp + 30 days, "Expiration time too far in future");
         require(tokenOut != address(0), "Invalid output token address");
+        require(isSupportedToken[tokenOut], "Token not supported by contract");
         
         uint256 hbarForSwap = msg.value - executionFee;
         require(hbarForSwap >= MIN_ORDER_AMOUNT, "Order amount too small: must be at least MIN_ORDER_AMOUNT");
@@ -344,12 +441,16 @@ contract AutoSwapLimit is Ownable, ReentrancyGuard {
         uint256[] memory amounts = saucerSwapRouter.swapExactETHForTokens{value: order.amountIn}(
             order.minAmountOut,  // amountOutMin
             path,                // path
-            order.owner,         // to (send tokens directly to owner)
+            address(this),       // to (send tokens to contract first)
             deadline             // deadline
         );
         
         // amounts[path.length - 1] is the amount of tokens received
         uint256 amountOut = amounts[path.length - 1];
+        
+        // Transfer tokens from contract to user using HTS
+        int responseCode = transferToken(order.tokenOut, address(this), order.owner, int64(uint64(amountOut)));
+        require(responseCode == HederaResponseCodes.SUCCESS, "Token transfer to user failed");
         
         // Pay fee to executor (whoever executed the order)
         payable(msg.sender).transfer(executionFee);
@@ -507,22 +608,22 @@ contract AutoSwapLimit is Ownable, ReentrancyGuard {
      */
     function _getOptimalPath(address tokenOut) internal view returns (address[] memory path) {
         require(tokenOut != address(0), "Invalid tokenOut address");
-        require(tokenOut != WETH, "Cannot swap WHBAR to WHBAR");
+        require(tokenOut != WHBAR_FOR_PATH, "Cannot swap WHBAR to WHBAR");
         
-        // Direct path for tokens with confirmed WHBAR pairs
-        if (tokenOut == USDC || tokenOut == SAUCE) {
+        // USDC tiene path directo con WHBAR
+        if (tokenOut == USDC) {
             path = new address[](2);
-            path[0] = WETH;    // WHBAR from router
-            path[1] = tokenOut; // Target token directly
+            path[0] = WHBAR_FOR_PATH; // WHBAR address correcta (0x0000000000000000000000000000000000003aD2)
+            path[1] = tokenOut;       // USDC directly
             return path;
         }
         
-        // For other tokens, use multi-hop through USDC (if USDC pair exists)
-        // Path: WHBAR -> USDC -> TOKEN
+        // Para SAUCE y otros tokens, usar multi-hop a través de USDC
+        // Path: WHBAR -> USDC -> TOKEN (este es el path correcto según el error)
         path = new address[](3);
-        path[0] = WETH;     // WHBAR from router
-        path[1] = USDC;     // Intermediate token (most liquid stablecoin available)
-        path[2] = tokenOut; // Target token
+        path[0] = WHBAR_FOR_PATH; // WHBAR address correcta (0x0000000000000000000000000000000000003aD2)
+        path[1] = USDC;           // USDC como intermediario (0x00000000000000000000000000000000000014F5)
+        path[2] = tokenOut;       // Target token (0x0000000000000000000000000000000000120f46)
         
         return path;
     }
@@ -694,10 +795,31 @@ contract AutoSwapLimit is Ownable, ReentrancyGuard {
     ) {
         return (
             USDC,
-            "USDC Testnet (0.0.5449) - Direct WHBAR pair available",
+            "USDC Testnet (0.0.5349) - Direct WHBAR pair available",
             SAUCE,
-            "SAUCE Testnet (0.0.1183558) - Direct WHBAR pair available"
+            "SAUCE Testnet (0.0.1183558) - Multi-hop via USDC"
         );
+    }
+    
+    /**
+     * @dev Get list of all supported tokens
+     */
+    function getSupportedTokens() external view returns (address[] memory) {
+        return supportedTokens;
+    }
+    
+    /**
+     * @dev Get count of supported tokens
+     */
+    function getSupportedTokenCount() external view returns (uint256) {
+        return supportedTokens.length;
+    }
+    
+    /**
+     * @dev Check if a token is supported
+     */
+    function isTokenSupported(address token) external view returns (bool) {
+        return isSupportedToken[token];
     }
     
     /**

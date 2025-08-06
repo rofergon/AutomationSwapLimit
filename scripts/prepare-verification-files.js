@@ -39,7 +39,7 @@ function prepareFiles() {
     console.log(`\nArchivos preparados en: ${OUTPUT_DIR}`);
     console.log('\nPara verificar el contrato en HashScan:');
     console.log('1. Ve a HashScan Testnet: https://hashscan.io/testnet');
-    console.log('2. Busca el contrato: 0.0.6503848 (o EVM: 0x0000000000000000000000000000000000633da8)');
+    console.log('2. Busca el contrato: 0.0.6504733 (o EVM: 0x0000000000000000000000000000000000634015)');
     console.log('3. Haz clic en "Verify" en la sección Contract Bytecode');
     console.log('4. Sube los archivos desde el directorio verification-files');
     console.log('5. Cuando te pregunte qué contrato verificar, selecciona "AutoSwapLimit" (importante)');
